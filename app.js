@@ -20,6 +20,18 @@ const BUCKETNAME = "iot-teamproject-data";
 const SLEEPKEY = 'sleep.txt';
 const STRESSKEY = 'sterss.txt';
 
+async function s3putObject() {
+  const command = new PutObjectCommand({
+      Bucket: BUCKETNAME,
+      Key: STRESSKEY,
+      Body: "hello world"
+  });
+  try {
+      await s3.send(command);
+  } catch (err) {
+      console.error(`S3 저장 실패`, err.message);
+  }
+}
 
 const MQTT_TOPIC = 'iot/stretch';
 const FITBIT_TOKEN_PATH = './secret.txt';
@@ -117,20 +129,7 @@ app.get('/api/stress', async (req, res) => {
       console.log(response.data);
       res.send(dumy_stress_data);
       response_stress = response.data.hrv[0].value.dailyRmssd;
-      // s3 
-      (async () => {
-          const command = new PutObjectCommand({
-              Bucket: BUCKETNAME,
-              Key: STRESSKEY,
-              Body: "hello world"
-          });
-          try {
-              await s3.send(command);
-              console.log(`S3 저장 완료: ${key}`);
-          } catch (err) {
-              console.error(`S3 저장 실패 (${label}):`, err.message);
-          }
-      })();
+      s3putObject();
       
     })
     .catch(error => {
@@ -154,20 +153,6 @@ app.get('/api/sleep', async (req, res) => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       res.send(dumy_sleep_data);
-      // s3
-      (async () => {
-          const command = new PutObjectCommand({
-              Bucket: BUCKETNAME,
-              Key: SLEEPKEY,
-              Body: "hello world"
-          });
-          try {
-              await s3.send(command);
-              console.log(`S3 저장 완료: ${key}`);
-          } catch (err) {
-              console.error(`S3 저장 실패 (${label}):`, err.message);
-          }
-      })();
       
     })
     .catch(error => {
@@ -177,19 +162,6 @@ app.get('/api/sleep', async (req, res) => {
 
 app.listen(3000, () => console.log('HTTP API 서버(3000)'));
 
-async function s3putObject() {
-  const command = new PutObjectCommand({
-      Bucket: BUCKETNAME,
-      Key: STRESSKEY,
-      Body: "hello world"
-  });
-  try {
-      await s3.send(command);
-  } catch (err) {
-      console.error(`S3 저장 실패`, err.message);
-  }
-}
-s3putObject();
 
 // --- [3] 스트레칭 알림 주기적 MQTT 전송 ---
 const mqtt = require('mqtt');
