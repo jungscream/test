@@ -157,6 +157,7 @@ app.get('/api/start', async (req, res) => {
 // });
 
 app.get('/api/stress', async (req, res) => {
+  console.log("hello world");
   const today = new Date().toISOString().split('T')[0];
   const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
 
