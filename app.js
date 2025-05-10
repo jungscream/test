@@ -159,29 +159,6 @@ app.get('/api/stress', async (req, res) => {
 // });
 
 
-// app.get('/api/sleep', async (req, res) => {
-//   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-//   const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
-
-//   try {
-//     const response = await axios.get(url, {
-//       headers: {
-//         'accept': 'application/json',
-//         'authorization': `Bearer ${ACCESS_TOKEN}`
-//       }
-//     });
-
-//     console.log(response.data);
-//     const response_sleep_time = response.data.summary.totalMinutesAsleep;
-//     res.send(dumy_sleep_data);
-//     await s3putObject(SLEEPKEY, dumy_sleep_data);
-
-//   } catch (error) {
-//     console.error('에러 발생:', error.response?.data || error.message);
-//     res.status(500).send('에러 발생');
-//   }
-// });
-
 app.get('/api/sleep', async (req, res) => {
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
@@ -194,23 +171,17 @@ app.get('/api/sleep', async (req, res) => {
       }
     });
 
+    console.log(response.data);
     const response_sleep_time = response.data.summary.totalMinutesAsleep;
-    console.log("✅ Fitbit 수면 시간:", response_sleep_time);
-
-    try {
-      await s3putObject(SLEEPKEY, response.data);
-      console.log("✅ S3 저장 완료");
-      res.send({ sleepTime: response_sleep_time, s3: 'saved' });
-    } catch (err) {
-      console.error("❌ S3 저장 실패", err);
-      res.send({ sleepTime: response_sleep_time, s3: 'fail' });
-    }
+    await s3putObject(SLEEPKEY, dumy_sleep_data);
+    res.send(dumy_sleep_data);
 
   } catch (error) {
-    console.error("🔥 Fitbit API 에러:", error.response?.data || error.message);
-    res.status(500).send('Fitbit API 요청 실패');
+    console.error('에러 발생:', error.response?.data || error.message);
+    res.status(500).send('에러 발생');
   }
 });
+
 
 
 app.listen(3000, () => console.log('HTTP API 서버(3000)'));
