@@ -128,9 +128,7 @@ app.get('/api/stress', async (req, res) => {
     .then(response => {
       console.log(response.data);
       res.send(dumy_stress_data);
-      response_stress = response.data.hrv[0].value.dailyRmssd;
-      s3putObject(STRESSKEY, dumy_stress_data);
-      
+      response_stress = response.data.hrv[0].value.dailyRmssd;      
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
@@ -153,8 +151,6 @@ app.get('/api/sleep', async (req, res) => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       res.send(dumy_sleep_data);
-      s3putObject(SLEEPKEY, dumy_sleep_data);
-      
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
@@ -162,6 +158,9 @@ app.get('/api/sleep', async (req, res) => {
 });
 
 app.listen(3000, () => console.log('HTTP API 서버(3000)'));
+
+s3putObject(STRESSKEY, dumy_stress_data);
+s3putObject(SLEEPKEY, dumy_sleep_data);
 
 
 // --- [3] 스트레칭 알림 주기적 MQTT 전송 ---
