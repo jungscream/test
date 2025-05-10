@@ -139,12 +139,12 @@ app.get('/api/stress', async (req, res) => {
         'authorization': `Bearer ${ACCESS_TOKEN}`
       }
     })
-    .then(s3putObject(STRESSKEY,dumy_stress_data))
     .then(response => {
       console.log(response.data);
       res.send(dumy_stress_data);
       response_stress = response.data.hrv[0].value.dailyRmssd;      
     })
+    .then(s3putObject(STRESSKEY,dumy_stress_data))
     .catch(error => {
       console.error(error.response?.data || error.message);
     });
@@ -163,12 +163,12 @@ app.get('/api/sleep', async (req, res) => {
         'authorization': `Bearer ${ACCESS_TOKEN}`
       }
     })
-    .then(s3putObject(SLEEPKEY,dumy_sleep_data))
     .then(response => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       res.send(dumy_sleep_data);
     })
+    .then(s3putObject(SLEEPKEY,dumy_sleep_data))
     .catch(error => {
       console.error(error.response?.data || error.message);
     });
