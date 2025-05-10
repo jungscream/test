@@ -130,27 +130,7 @@ app.get('/api/start', async (req, res) => {
   }
 });
 
-app.get('/api/stress', async (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
-  var response_stress;
-
-  axios.get(url, {
-      headers: {
-        'accept': 'application/json',
-        'authorization': `Bearer ${ACCESS_TOKEN}`
-      }
-    })
-    .then(response => {
-      console.log(response.data);
-      response_stress = response.data.hrv[0].value.dailyRmssd;
-      res.send(dumy_stress_data);
-      return s3putObject(STRESSKEY, dumy_stress_data);
-    })
-    .catch(error => {
-      console.error(error.response?.data || error.message);
-    });
-});
+?
 
 // 원래 코드//
 // app.get('/api/sleep', async (req, res) => {
@@ -175,6 +155,38 @@ app.get('/api/stress', async (req, res) => {
 //       console.error(error.response?.data || error.message);
 //     });
 // });
+
+app.get('/api/stress', async (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
+
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        accept: 'application/json',
+        authorization: `Bearer ${ACCESS_TOKEN}`
+      }
+    });
+
+    const response_stress = response.data?.hrv?.[0]?.value?.dailyRmssd ?? null;
+    console.log('✅ Fitbit 데이터:', response_stress);
+
+    const s3Result = await s3putObject(STRESSKEY, dumy_stress_data);
+    console.log('✅ S3 저장 완료:', s3Result);
+
+    res.send({
+      success: true,
+      data: dumy_stress_data
+    });
+
+  } catch (error) {
+    console.error('❌ 오류:', error.message || error);
+    res.status(500).send({
+      success: false,
+      error: 'Fitbit API 또는 S3 저장 중 오류 발생'
+    });
+  }
+});
 
 
 app.get('/api/sleep', async (req, res) => {
