@@ -122,29 +122,28 @@ app.get('/api/start', async (req, res) => {
 });
 
 app.get('/api/stress', async (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
-  var response_stress;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
 
-  axios.get(url, {
+    const response = await axios.get(url, {
       headers: {
-        'accept': 'application/json',
-        'authorization': `Bearer ${ACCESS_TOKEN}`
-      }
-    })
-    .then(response => {
-      const response_stress = response.data.hrv[0]?.value?.dailyRmssd || null;
-      console.log(response.data);
-    
-      const keyStress = `/stress-${today}.json`;
-      return uploadToS3(bucketName, keyStress, dumy_stress_data);
-    })
-    .then(() => {
-      res.send(dumy_stress_data);
-    })
-    .catch(error => {
-      console.error(error.response?.data || error.message);
+        accept: 'application/json',
+        authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
     });
+
+    const response_stress = response.data.hrv[0]?.value?.dailyRmssd || null;
+    console.log(response.data);
+
+    const keyStress = `/stress-${today}.json`;
+    await uploadToS3(bucketName, keyStress, dumy_stress_data);
+
+    res.send(dumy_stress_data);
+  } catch (error) {
+    console.error('에러 발생:', error.response?.data || error.message);
+    res.status(500).send('오류 발생');
+  }
 });
 
 app.get('/api/sleep', async (req, res) => {
