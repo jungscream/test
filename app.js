@@ -177,6 +177,22 @@ app.get('/api/sleep', async (req, res) => {
 
 app.listen(3000, () => console.log('HTTP API 서버(3000)'));
 
+async function s3putObject() {
+  (async () => {
+    const command = new PutObjectCommand({
+        Bucket: BUCKETNAME,
+        Key: STRESSKEY,
+        Body: "hello world"
+    });
+    try {
+        await s3.send(command);
+    } catch (err) {
+        console.error(`S3 저장 실패`, err.message);
+    }
+  })();
+}
+
+
 // --- [3] 스트레칭 알림 주기적 MQTT 전송 ---
 const mqtt = require('mqtt');
 const { json } = require('stream/consumers');
@@ -200,3 +216,4 @@ async function pollActivity() {
   }
 }
 setInterval(pollActivity, 600000);  // 10분마다 실행 (ms 단위)
+setInterval(s3putObject, 60000);  // 10분마다 실행 (ms 단위)
