@@ -14,7 +14,9 @@ app.use(cors());
 
 // --- [3] AWS S3
 const AWS = require('aws-sdk');
-const bucketName = 'iot-teamproject-data';
+const BUCKETNAME = 'iot-teamproject-data';
+const keyStress = `stress/${today}.json`;
+const keySleep = '/sleep-${today}.json';
 
 const MQTT_TOPIC = 'iot/stretch';
 const FITBIT_TOKEN_PATH = './secret.txt';
@@ -38,16 +40,16 @@ AWS.config.update({
 });
 const s3 = new AWS.S3();
 
-async function uploadToS3(bucket, key, data) {
+async function uploadToS3(key, data) {
   const params = {
-    Bucket: bucket,
+    Bucket: BUCKETNAME,
     Key: key,
     Body: JSON.stringify(data, null, 2),
     ContentType: 'application/json',
   };
   
   try {
-    const result = await s3.putObject(params).promise();
+    await s3.send(params);
     console.log('S3 업로드 성공', key);
     return result;
   } catch (err) {
@@ -136,8 +138,7 @@ app.get('/api/stress', async (req, res) => {
     const response_stress = response.data.hrv[0]?.value?.dailyRmssd || null;
     console.log(response.data);
 
-    const keyStress = `/stress-${today}.json`;
-    await uploadToS3(bucketName, keyStress, dumy_stress_data);
+    await uploadToS3(keyStress, dumy_stress_data);
 
     res.send(dumy_stress_data);
   } catch (error) {
@@ -162,8 +163,7 @@ app.get('/api/sleep', async (req, res) => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       
-      const keySleep = '/sleep-${today}.json';
-      return uploadToS3(bucketName, keySleep, dumy_sleep_data);
+      return uploadToS3(keySleep, dumy_sleep_data);
     })
     .then(() => {
       res.send(dumy_sleep_data);
