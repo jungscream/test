@@ -25,7 +25,7 @@ async function s3putObject(key, data) {
   const command = new PutObjectCommand({
       Bucket: BUCKETNAME,
       Key: key,
-      Body: ReadableStream.from([stringData])
+      Body: Readable.from([stringData])
   });
   try {
       await s3.send(command);
