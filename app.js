@@ -17,8 +17,8 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const REGION = 'ap-northeast-2';
 const s3 = new S3Client({ region: REGION });
 const BUCKETNAME = "iot-teamproject-data";
-const SLEEPKEY = '/sleep.txt';
-const STRESSKEY = '/sterss.txt';
+const SLEEPKEY = 'sleep.txt';
+const STRESSKEY = 'sterss.txt';
 
 
 const MQTT_TOPIC = 'iot/stretch';
