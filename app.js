@@ -135,6 +135,7 @@ app.get('/api/stress', async (req, res) => {
     });
 });
 
+// 원래 코드//
 // app.get('/api/sleep', async (req, res) => {
   
 //   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -159,26 +160,64 @@ app.get('/api/stress', async (req, res) => {
 // });
 
 
-app.get('/api/sleep', async (req, res) => {
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-  const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
+// app.get('/api/sleep', async (req, res) => {
+//   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+//   const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
+
+//   try {
+//     const response = await axios.get(url, {
+//       headers: {
+//         'accept': 'application/json',
+//         'authorization': `Bearer ${ACCESS_TOKEN}`
+//       }
+//     });
+
+//     console.log(response.data);
+//     const response_sleep_time = response.data.summary.totalMinutesAsleep;
+//     res.send(dumy_sleep_data);
+//     await s3putObject(SLEEPKEY, dumy_sleep_data);
+
+//   } catch (error) {
+//     console.error('에러 발생:', error.response?.data || error.message);
+//     res.status(500).send('에러 발생');
+//   }
+// });
+
+app.get('/api/stress', async (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
 
   try {
     const response = await axios.get(url, {
       headers: {
-        'accept': 'application/json',
-        'authorization': `Bearer ${ACCESS_TOKEN}`
-      }
+        accept: 'application/json',
+        authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
     });
 
-    console.log(response.data);
-    const response_sleep_time = response.data.summary.totalMinutesAsleep;
-    await s3putObject(SLEEPKEY, dumy_sleep_data);
-    res.send(dumy_sleep_data);
+    const stressValue = response.data.hrv?.[0]?.value?.dailyRmssd || null;
+
+    // 저장할 데이터 포맷 정의
+    const data = {
+      date: today,
+      stress: stressValue,
+      raw: response.data
+    };
+
+    const putParams = {
+      Bucket: process.env.S3_BUCKET,
+      Key: `stress/${today}.json`,
+      Body: JSON.stringify(data),
+      ContentType: 'application/json',
+    };
+
+    await s3.send(new PutObjectCommand(putParams));
+
+    res.json({ success: true, stress: stressValue });
 
   } catch (error) {
-    console.error('에러 발생:', error.response?.data || error.message);
-    res.status(500).send('에러 발생');
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ success: false, error: 'Fitbit 또는 S3 오류' });
   }
 });
 
