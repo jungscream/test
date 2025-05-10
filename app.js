@@ -20,17 +20,27 @@ const BUCKETNAME = "iot-teamproject-data";
 const SLEEPKEY = 'sleep.txt';
 const STRESSKEY = 'sterss.txt';
 
+// async function s3putObject(key, data) {
+//   const command = new PutObjectCommand({
+//       Bucket: BUCKETNAME,
+//       Key: key,
+//       Body: JSON.stringify(data, null, 2)
+//   });
+//   try {
+//       await s3.send(command);
+//   } catch (err) {
+//       console.error(`S3 저장 실패`, err.message);
+//   }
+// }
+
 async function s3putObject(key, data) {
   const command = new PutObjectCommand({
-      Bucket: BUCKETNAME,
-      Key: key,
-      Body: JSON.stringify(data, null, 2)
+    Bucket: BUCKETNAME,
+    Key: key,
+    Body: JSON.stringify(data),
   });
-  try {
-      await s3.send(command);
-  } catch (err) {
-      console.error(`S3 저장 실패`, err.message);
-  }
+
+  return await s3.send(command);
 }
 
 const MQTT_TOPIC = 'iot/stretch';
@@ -138,28 +148,28 @@ app.get('/api/stress', async (req, res) => {
 });
 
 // 원래 코드//
-app.get('/api/sleep', async (req, res) => {
+// app.get('/api/sleep', async (req, res) => {
   
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-  const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
-  var response_sleep_time;
+//   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+//   const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
+//   var response_sleep_time;
 
-  axios.get(url, {
-      headers: {
-        'accept': 'application/json',
-        'authorization': `Bearer ${ACCESS_TOKEN}`
-      }
-    })
-    .then(response => {
-      console.log(response.data);
-      response_sleep_time = response.data.summary.totalMinutesAsleep;
-      res.send(dumy_sleep_data);
-      s3putObject(SLEEPKEY, dumy_sleep_data);
-    })
-    .catch(error => {
-      console.error(error.response?.data || error.message);
-    });
-});
+//   axios.get(url, {
+//       headers: {
+//         'accept': 'application/json',
+//         'authorization': `Bearer ${ACCESS_TOKEN}`
+//       }
+//     })
+//     .then(response => {
+//       console.log(response.data);
+//       response_sleep_time = response.data.summary.totalMinutesAsleep;
+//       res.send(dumy_sleep_data);
+//       s3putObject(SLEEPKEY, dumy_sleep_data);
+//     })
+//     .catch(error => {
+//       console.error(error.response?.data || error.message);
+//     });
+// });
 
 
 // app.get('/api/sleep', async (req, res) => {
@@ -184,6 +194,31 @@ app.get('/api/sleep', async (req, res) => {
 //     res.status(500).send('에러 발생');
 //   }
 // });
+
+
+app.get('/api/sleep', async (req, res) => {
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
+
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        accept: 'application/json',
+        authorization: `Bearer ${ACCESS_TOKEN}`
+      }
+    });
+
+    console.log(response.data);
+    const response_sleep_time = response.data.summary.totalMinutesAsleep;
+    const s3Result = await s3putObject(SLEEPKEY, dumy_sleep_data); // 먼저 S3 저장
+    res.send({ success: true, data: dumy_sleep_data });
+
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).send({ success: false, error: 'Fitbit or S3 error' });
+  }
+});
+
 
 
 
