@@ -20,6 +20,19 @@ const BUCKETNAME = "iot-teamproject-data";
 const SLEEPKEY = `sleep/${new Date().toISOString().split('T')[0]}.json`;
 const STRESSKEY = `stress/${new Date().toISOString().split('T')[0]}.json`;
 
+// async function s3putObject(key, data) {
+//   const command = new PutObjectCommand({
+//       Bucket: BUCKETNAME,
+//       Key: key,
+//       Body: JSON.stringify(data, null, 2)
+//   });
+//   try {
+//       await s3.send(command);
+//   } catch (err) {
+//       console.error(`S3 저장 실패`, err.message);
+//   }
+// }
+
 async function s3putObject(key, data) {
   const command = new PutObjectCommand({
       Bucket: BUCKETNAME,
@@ -126,12 +139,11 @@ app.get('/api/stress', async (req, res) => {
         'authorization': `Bearer ${ACCESS_TOKEN}`
       }
     })
+    .then(s3putObject(STRESSKEY,dumy_stress_data))
     .then(response => {
       console.log(response.data);
       res.send(dumy_stress_data);
       response_stress = response.data.hrv[0].value.dailyRmssd;      
-    }).then(response =>{
-      s3putObject(STRESSKEY, dumy_stress_data);
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
@@ -155,7 +167,6 @@ app.get('/api/sleep', async (req, res) => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       res.send(dumy_sleep_data);
-      s3putObject(SLEEPKEY, dumy_sleep_data);
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
