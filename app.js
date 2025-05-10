@@ -17,8 +17,8 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const REGION = 'ap-northeast-2';
 const s3 = new S3Client({ region: REGION });
 const BUCKETNAME = "iot-teamproject-data";
-const SLEEPKEY = 'sleep.txt';
-const STRESSKEY = 'sterss.txt';
+const SLEEPKEY = `sleep/${new Date().toISOString().split('T')[0]}.json`;
+const STRESSKEY = `stress/${new Date().toISOString().split('T')[0]}.json`;
 
 // async function s3putObject(key, data) {
 //   const command = new PutObjectCommand({
@@ -39,7 +39,6 @@ async function s3putObject(key, data) {
     Key: key,
     Body: JSON.stringify(data),
   });
-
   return await s3.send(command);
 }
 
