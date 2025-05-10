@@ -200,8 +200,7 @@ app.get('/api/stress', async (req, res) => {
     // 저장할 데이터 포맷 정의
     const data = {
       date: today,
-      stress: stressValue,
-      raw: response.data
+      stress: dumy_stress_data,
     };
 
     const putParams = {
