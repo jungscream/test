@@ -42,7 +42,7 @@ var auth_code;
 var authorizationCode;
 var ACCESS_TOKEN;
 
-const dumy_stress_data = [20,40,50,80,10];
+const dumy_stress_data = [20,40,50,40,10];
 const dumy_sleep_data = {
   "hour" : 6,
   "minutes" : 42,
