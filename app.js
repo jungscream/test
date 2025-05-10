@@ -20,11 +20,11 @@ const BUCKETNAME = "iot-teamproject-data";
 const SLEEPKEY = 'sleep.txt';
 const STRESSKEY = 'sterss.txt';
 
-async function s3putObject() {
+async function s3putObject(key, data) {
   const command = new PutObjectCommand({
       Bucket: BUCKETNAME,
-      Key: STRESSKEY,
-      Body: "hello world"
+      Key: key,
+      Body: data
   });
   try {
       await s3.send(command);
@@ -129,7 +129,7 @@ app.get('/api/stress', async (req, res) => {
       console.log(response.data);
       res.send(dumy_stress_data);
       response_stress = response.data.hrv[0].value.dailyRmssd;
-      s3putObject();
+      s3putObject(STRESSKEY, dumy_stress_data);
       
     })
     .catch(error => {
@@ -153,6 +153,7 @@ app.get('/api/sleep', async (req, res) => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
       res.send(dumy_sleep_data);
+      s3putObject(SLEEPKEY, dumy_sleep_data);
       
     })
     .catch(error => {
