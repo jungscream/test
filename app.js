@@ -13,10 +13,11 @@ const app = express();
 app.use(cors());
 
 // --- [3] AWS S3
+const today = new Date().toISOString().split('T')[0];
 const AWS = require('aws-sdk');
 const BUCKETNAME = 'iot-teamproject-data';
 const keyStress = `stress/${today}.json`;
-const keySleep = '/sleep-${today}.json';
+const keySleep = `sleep-${today}.json`;
 
 const MQTT_TOPIC = 'iot/stretch';
 const FITBIT_TOKEN_PATH = './secret.txt';
@@ -125,7 +126,6 @@ app.get('/api/start', async (req, res) => {
 
 app.get('/api/stress', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
     const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
 
     const response = await axios.get(url, {
