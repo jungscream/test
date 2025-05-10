@@ -1,23 +1,25 @@
-// --- [1] MQTT 브로커 생성 1883 포트 (Aedes) ---
+// --- [1] MQTT 브로커 생성 (Aedes) ---
 const aedes = require('aedes')();
 const net = require('net');
 const mqttServer = net.createServer(aedes.handle);
 mqttServer.listen(1883, () => console.log('MQTT 브로커 동작중 (1883 포트)'));
 
-// --- [2] Express HTTP API 서버 3000포트 ---
+// --- [2] Express HTTP API 서버 ---
 const express = require('express');
-const cors = require('cors'); // 다른 도메인에서도 접근 가능하게 해줌줌
+const cors = require('cors');
 const axios = require('axios');
 const fs = require('fs');
 const app = express();
 app.use(cors());
 
-// --- [3] AWS S3
-const today = new Date().toISOString().split('T')[0];
-const AWS = require('aws-sdk');
-const BUCKETNAME = 'iot-teamproject-data';
-const keyStress = `stress/${today}.json`;
-const keySleep = `sleep-${today}.json`;
+// s3
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const REGION = 'ap-northeast-2';
+const s3 = new S3Client({ region: REGION });
+const BUCKETNAME = "iot-teamproject-data";
+const SLEEPKEY = '/sleep.txt';
+const STRESSKEY = '/sterss.txt';
+
 
 const MQTT_TOPIC = 'iot/stretch';
 const FITBIT_TOKEN_PATH = './secret.txt';
@@ -32,31 +34,8 @@ const dumy_sleep_data = {
   "hour" : 6,
   "minutes" : 42,
   "avgHours" : 7,
-  "avgMins" : 30, 
+  "avgMins" : 30,
   "restAdvice" : 5
-}
-
-AWS.config.update({
-  region: 'ap-northeast-2',
-});
-const s3 = new AWS.S3();
-
-async function uploadToS3(key, data) {
-  const params = {
-    Bucket: BUCKETNAME,
-    Key: key,
-    Body: JSON.stringify(data, null, 2),
-    ContentType: 'application/json',
-  };
-  
-  try {
-    await s3.send(params);
-    console.log('S3 업로드 성공', key);
-    return result;
-  } catch (err) {
-    consol.error('S3 업로드 실패:', err);
-    throw err;
-  }
 }
 
 function loadAccessToken() {
@@ -106,7 +85,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// fitbit 인증 페이지로 redirection
 app.get('/api/start', async (req, res) => {
   const token = loadAccessToken();
   try {
@@ -125,26 +103,39 @@ app.get('/api/start', async (req, res) => {
 });
 
 app.get('/api/stress', async (req, res) => {
-  try {
-    const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
+  const today = new Date().toISOString().split('T')[0];
+  const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
+  var response_stress;
 
-    const response = await axios.get(url, {
+  axios.get(url, {
       headers: {
-        accept: 'application/json',
-        authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+        'accept': 'application/json',
+        'authorization': `Bearer ${ACCESS_TOKEN}`
+      }
+    })
+    .then(response => {
+      console.log(response.data);
+      res.send(dumy_stress_data);
+      response_stress = response.data.hrv[0].value.dailyRmssd;
+      // s3 
+      (async () => {
+          const command = new PutObjectCommand({
+              Bucket: BUCKETNAME,
+              Key: STRESSKEY,
+              Body: "hello world"
+          });
+          try {
+              await s3.send(command);
+              console.log(`S3 저장 완료: ${key}`);
+          } catch (err) {
+              console.error(`S3 저장 실패 (${label}):`, err.message);
+          }
+      })();
+      
+    })
+    .catch(error => {
+      console.error(error.response?.data || error.message);
     });
-
-    const response_stress = response.data.hrv[0]?.value?.dailyRmssd || null;
-    console.log(response.data);
-
-    await uploadToS3(keyStress, dumy_stress_data);
-
-    res.send(dumy_stress_data);
-  } catch (error) {
-    console.error('에러 발생:', error.response?.data || error.message);
-    res.status(500).send('오류 발생');
-  }
 });
 
 app.get('/api/sleep', async (req, res) => {
@@ -162,11 +153,22 @@ app.get('/api/sleep', async (req, res) => {
     .then(response => {
       console.log(response.data);
       response_sleep_time = response.data.summary.totalMinutesAsleep;
-      
-      return uploadToS3(keySleep, dumy_sleep_data);
-    })
-    .then(() => {
       res.send(dumy_sleep_data);
+      // s3
+      (async () => {
+          const command = new PutObjectCommand({
+              Bucket: BUCKETNAME,
+              Key: SLEEPKEY,
+              Body: "hello world"
+          });
+          try {
+              await s3.send(command);
+              console.log(`S3 저장 완료: ${key}`);
+          } catch (err) {
+              console.error(`S3 저장 실패 (${label}):`, err.message);
+          }
+      })();
+      
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
@@ -178,7 +180,6 @@ app.listen(3000, () => console.log('HTTP API 서버(3000)'));
 // --- [3] 스트레칭 알림 주기적 MQTT 전송 ---
 const mqtt = require('mqtt');
 const { json } = require('stream/consumers');
-const { join } = require('path');
 const MQTT_SERVER = 'mqtt://localhost:1883';
 const mqttClient = mqtt.connect(MQTT_SERVER);
 
