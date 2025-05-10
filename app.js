@@ -130,8 +130,6 @@ app.get('/api/start', async (req, res) => {
   }
 });
 
-?
-
 // 원래 코드//
 // app.get('/api/sleep', async (req, res) => {
   
