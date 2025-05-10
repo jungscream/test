@@ -40,11 +40,13 @@ async function s3putObject(key, data) {
       Body: JSON.stringify(data, null, 2)
   });
   try {
-      const result = await s3.send(command);
-      return result;
+    console.log(`🚀 S3 업로드 시작: key=${key}`);
+    const result = await s3.send(command);
+    console.log('✅ S3 업로드 성공:', result);
+    return result;
   } catch (err) {
-      console.error(`S3 저장 실패`, err.message);
-      throw err;
+    console.error('❌ S3 저장 실패:', err.message);
+    throw err;
   }
 }
 
