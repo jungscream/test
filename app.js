@@ -21,11 +21,10 @@ const SLEEPKEY = 'sleep.txt';
 const STRESSKEY = 'sterss.txt';
 
 async function s3putObject(key, data) {
-  const stringData = JSON.stringify(data);
   const command = new PutObjectCommand({
       Bucket: BUCKETNAME,
       Key: key,
-      Body: Readable.from([stringData])
+      Body: JSON.stringify(data, null, 2)
   });
   try {
       await s3.send(command);
