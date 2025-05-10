@@ -20,14 +20,14 @@ const BUCKETNAME = "iot-teamproject-data";
 const SLEEPKEY = 'sleep.txt';
 const STRESSKEY = 'sterss.txt';
 
-async function s3putObject(key, data) {
+function s3putObject(key, data) {
   const command = new PutObjectCommand({
       Bucket: BUCKETNAME,
       Key: key,
       Body: JSON.stringify(data, null, 2)
   });
   try {
-      await s3.send(command);
+      s3.send(command);
   } catch (err) {
       console.error(`S3 저장 실패`, err.message);
   }
