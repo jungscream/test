@@ -74,7 +74,7 @@ function loadAccessToken() {
 }
 
 //oauth 에서 redirect 받기
-app.get('/', (req, res) => {
+oauthApp.get('/', (req, res) => {
   authorizationCode = req.query.code;
 
   if (authorizationCode) {
@@ -126,7 +126,7 @@ oauthApp.get('/api/start', async (req, res) => {
   }
 });
 
-app.get('/api/stress', async (req, res) => {
+oauthApp.get('/api/stress', async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
   const url = `https://api.fitbit.com/1/user/-/hrv/date/${today}.json`;
   var response_stress;
@@ -149,7 +149,7 @@ app.get('/api/stress', async (req, res) => {
 });
 
 // 원래 코드//
-app.get('/api/sleep', async (req, res) => {
+oauthApp.get('/api/sleep', async (req, res) => {
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const url = `https://api.fitbit.com/1.2/user/-/sleep/date/${yesterday}.json`;
   var response_sleep_time;
