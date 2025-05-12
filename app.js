@@ -109,7 +109,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api/start', async (req, res) => {
+oauthApp.get('/api/start', async (req, res) => {
   const token = loadAccessToken();
   try {
     const params = new URLSearchParams({
