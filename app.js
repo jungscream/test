@@ -12,11 +12,6 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 
-
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/fullchain.pem')
-};
 // s3
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const REGION = 'ap-northeast-2';
