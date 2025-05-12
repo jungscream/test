@@ -7,3 +7,5 @@ const app = express();
 app.get('/', (req, res) => {
   res.send('✅ HTTPS 서버 성공적으로 작동 중입니다!');
 });
+
+app.listen(3000, () => console.log('HTTP API 서버(3000)'));
