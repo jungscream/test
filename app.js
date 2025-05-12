@@ -64,38 +64,39 @@ function loadAccessToken() {
 
 //oauth 에서 redirect 받기
 app.get('/', (req, res) => {
-  authorizationCode = req.query.code;
+  // authorizationCode = req.query.code;
 
-  if (authorizationCode) {
-    console.log('Fitbit에서 받은 인증 코드:', authorizationCode);
-  } else {
-    console.error('URL에서 인증 코드를 찾을 수 없습니다.', req.query);
-  }
+  // if (authorizationCode) {
+  //   console.log('Fitbit에서 받은 인증 코드:', authorizationCode);
+  // } else {
+  //   console.error('URL에서 인증 코드를 찾을 수 없습니다.', req.query);
+  // }
 
-  const url = 'https://api.fitbit.com/oauth2/token';
-  const params = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code: authorizationCode
-  }).toString();
+  // const url = 'https://api.fitbit.com/oauth2/token';
+  // const params = new URLSearchParams({
+  //   grant_type: 'authorization_code',
+  //   code: authorizationCode
+  // }).toString();
 
-  axios.post(url, params, {
-    headers: {
-      'Authorization': `${auth_code}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    }
-  })
-  .then(response => {
-    ACCESS_TOKEN = response.data.access_token;
-    console.log("access token : ", ACCESS_TOKEN);
-    res.send(`access token ${ACCESS_TOKEN}`);
-  })
-  .catch(err => {
-    if (err.response) {
-      console.error('에러:', err.response.status, err.response.data);
-    } else {
-      console.error('에러:', err.message);
-    }
-  });
+  // axios.post(url, params, {
+  //   headers: {
+  //     'Authorization': `${auth_code}`,
+  //     'Content-Type': 'application/x-www-form-urlencoded',
+  //   }
+  // })
+  // .then(response => {
+  //   ACCESS_TOKEN = response.data.access_token;
+  //   console.log("access token : ", ACCESS_TOKEN);
+  //   res.send(`access token ${ACCESS_TOKEN}`);
+  // })
+  // .catch(err => {
+  //   if (err.response) {
+  //     console.error('에러:', err.response.status, err.response.data);
+  //   } else {
+  //     console.error('에러:', err.message);
+  //   }
+  // });
+  console.log("hello world");
 });
 
 app.get('/api/start', async (req, res) => {
@@ -128,8 +129,9 @@ app.get('/api/stress', async (req, res) => {
     })
     .then(response => {
       console.log(response.data);
-      res.send(dumy_stress_data);
       response_stress = response.data.hrv[0].value.dailyRmssd;
+      res.send(dumy_stress_data);
+      s3putObject(STRESSKEY, dumy_stress_data);
     })
     .catch(error => {
       console.error(error.response?.data || error.message);
