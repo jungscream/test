@@ -74,7 +74,7 @@ function loadAccessToken() {
 }
 
 //oauth 에서 redirect 받기
-oauthApp.get('/', (req, res) => {
+app.get('/', (req, res) => {
   authorizationCode = req.query.code;
 
   if (authorizationCode) {
@@ -109,7 +109,7 @@ oauthApp.get('/', (req, res) => {
   });
 });
 
-oauthApp.get('/api/start', async (req, res) => {
+app.get('/api/start', async (req, res) => {
   const token = loadAccessToken();
   try {
     const params = new URLSearchParams({
