@@ -69,9 +69,6 @@ function loadAccessToken() {
   app_id = data.app_id;
   auth_code = data.auth_code;
 
-  const encoded = Buffer.from(`${app_id}:${app_secret}`).toString('base64');
-  auth_code = `Basic ${encoded}`;
-
   console.log("app_id = ", app_id);
   console.log("auth_code = ", auth_code);
 }
