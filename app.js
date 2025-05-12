@@ -34,6 +34,17 @@ async function s3putObject(key, data) {
 }
 
 
+// https
+const https = require('https');
+
+const httpsOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/fullchain.pem')
+};
+
+const oauthApp = express();
+oauthApp.use(cors());
+
 const MQTT_TOPIC = 'iot/stretch';
 const FITBIT_TOKEN_PATH = './secret.txt';
 
@@ -63,7 +74,7 @@ function loadAccessToken() {
 }
 
 //oauth 에서 redirect 받기
-app.get('/', (req, res) => {
+oauthApp.get('/', (req, res) => {
   authorizationCode = req.query.code;
 
   if (authorizationCode) {
@@ -98,7 +109,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api/start', async (req, res) => {
+oauthApp.get('/api/start', async (req, res) => {
   const token = loadAccessToken();
   try {
     const params = new URLSearchParams({
@@ -188,7 +199,9 @@ app.get('/api/sleep', async (req, res) => {
 
 
 app.listen(3000, () => console.log('HTTP API 서버(3000)'));
-
+https.createServer(httpsOptions, oauthApp).listen(443, () => {
+  console.log('✅ HTTPS OAuth 서버 실행 중 (443)');
+});
 // s3putObject(STRESSKEY, dumy_stress_data);
 // s3putObject(SLEEPKEY, dumy_sleep_data);
 
