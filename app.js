@@ -12,6 +12,11 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 
+
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/jungscream.shop/fullchain.pem')
+};
 // s3
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const REGION = 'ap-northeast-2';
@@ -64,39 +69,38 @@ function loadAccessToken() {
 
 //oauth 에서 redirect 받기
 app.get('/', (req, res) => {
-  // authorizationCode = req.query.code;
+  authorizationCode = req.query.code;
 
-  // if (authorizationCode) {
-  //   console.log('Fitbit에서 받은 인증 코드:', authorizationCode);
-  // } else {
-  //   console.error('URL에서 인증 코드를 찾을 수 없습니다.', req.query);
-  // }
+  if (authorizationCode) {
+    console.log('Fitbit에서 받은 인증 코드:', authorizationCode);
+  } else {
+    console.error('URL에서 인증 코드를 찾을 수 없습니다.', req.query);
+  }
 
-  // const url = 'https://api.fitbit.com/oauth2/token';
-  // const params = new URLSearchParams({
-  //   grant_type: 'authorization_code',
-  //   code: authorizationCode
-  // }).toString();
+  const url = 'https://api.fitbit.com/oauth2/token';
+  const params = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: authorizationCode
+  }).toString();
 
-  // axios.post(url, params, {
-  //   headers: {
-  //     'Authorization': `${auth_code}`,
-  //     'Content-Type': 'application/x-www-form-urlencoded',
-  //   }
-  // })
-  // .then(response => {
-  //   ACCESS_TOKEN = response.data.access_token;
-  //   console.log("access token : ", ACCESS_TOKEN);
-  //   res.send(`access token ${ACCESS_TOKEN}`);
-  // })
-  // .catch(err => {
-  //   if (err.response) {
-  //     console.error('에러:', err.response.status, err.response.data);
-  //   } else {
-  //     console.error('에러:', err.message);
-  //   }
-  // });
-  console.log("hello world");
+  axios.post(url, params, {
+    headers: {
+      'Authorization': `${auth_code}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }
+  })
+  .then(response => {
+    ACCESS_TOKEN = response.data.access_token;
+    console.log("access token : ", ACCESS_TOKEN);
+    res.send(`access token ${ACCESS_TOKEN}`);
+  })
+  .catch(err => {
+    if (err.response) {
+      console.error('에러:', err.response.status, err.response.data);
+    } else {
+      console.error('에러:', err.message);
+    }
+  });
 });
 
 app.get('/api/start', async (req, res) => {
